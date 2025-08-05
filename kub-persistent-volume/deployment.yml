@@ -1,0 +1,52 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: story-deployment
+spec: 
+  replicas: 2
+  selector:
+    matchLabels:
+      app: story
+  template:
+    metadata:
+      labels:
+        app: story
+    spec:
+      containers:
+        - name: story
+          image: uya0/kub-data:latest
+          env:
+            - name: STORY_FOLDER
+            # value: "/app/story"
+              valueFrom:
+                configMapKeyRef:
+                  name: story-config
+                  key: STORY_FOLDER
+          resources:
+            requests:
+              memory: "64Mi"
+              cpu: "250m"
+            limits:
+              memory: "128Mi"
+              cpu: "500m"
+          volumeMounts:
+            - mountPath: /app/story
+              name: story-volume
+      volumes:
+        - name: story-volume
+          persistentVolumeClaim:
+            claimName: host-pvc
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: story-service
+spec:
+  selector: 
+    app: story
+  type: NodePort
+  ports:
+    - protocol: "TCP"
+      port: 80
+      targetPort: 3000
+      nodePort: 30080
