@@ -1,0 +1,6 @@
+FirstName,LastName,JobTitle,Department,Manager,OU,Groups
+John,Doe,Software Developer,IT,alice.manager,,Developers;RemoteUsers
+Jane,Smith,HR Manager,Human Resources,bob.director,"OU=HR,OU=Users,DC=company,DC=com",HR Managers;All Staff
+Mike,Johnson,Sales Representative,Sales,sarah.manager,,Sales Team;CRM Users
+Lisa,Brown,Marketing Specialist,Marketing,tom.director,"OU=Marketing,OU=Users,DC=company,DC=com",Marketing Team;Creative Suite Users
+David,Wilson,System Administrator,IT,alice.manager,,IT Admins;Server Admins;Developers

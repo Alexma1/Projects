@@ -21,6 +21,7 @@ function Get-SystemInfo {
             ComputerName     = $ComputerName
             OSVersion        = $os.Caption
             OSBuild          = $os.BuildNumber
+            LastRebootTime   = $os.LastBootUpTime
             TotalRAMGB       = "{0:N2}" -f ($mem.Capacity | Measure-Object -Sum).Sum / 1GB
             CPU              = $cpu.Name
             DiskInfo         = $disk | Select-Object DeviceID, @{Name="FreeGB";Expression={"{0:N2}" -f ($_.FreeSpace / 1GB)}}, @{Name="SizeGB";Expression={"{0:N2}" -f ($_.Size / 1GB)}}
