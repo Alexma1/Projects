@@ -1,0 +1,100 @@
+---
+- name: CentOS 9 Lifecycle Maintenance
+  hosts: all
+  become: yes
+
+  vars:
+    kernel_retention: 2
+    log_archive_dir: /var/log/archives
+    reboot_required_file: /tmp/reboot_required
+
+  tasks:
+
+    - name: Update package cache and upgrade all packages
+      dnf:
+        name: "*"
+        state: latest
+        update_cache: yes
+      register: update_result
+      notify: "Trigger Reboot"
+      tags:
+        - patch
+
+    - name: Clean up unused packages
+      dnf:
+        autoremove: yes
+        autoclean: yes
+      tags:
+        - cleanup
+
+    - name: Remove old kernels beyond retention
+      shell: |
+        rpm -q kernel \
+          | sort -V \
+          | head -n -{{ kernel_retention }} \
+          | xargs -r dnf remove -y
+      args:
+        warn: false
+      notify: "Trigger Reboot"
+      tags:
+        - cleanup
+
+    - name: Find logs older than 30 days
+      find:
+        paths: /var/log
+        age: 30d
+        patterns: "*.log"
+      register: old_logs
+      tags:
+        - logs
+
+    - name: Ensure archive directory exists
+      file:
+        path: "{{ log_archive_dir }}"
+        state: directory
+        mode: '0755'
+      tags:
+        - logs
+
+    - name: Compress old log files
+      archive:
+        path: "{{ item.path }}"
+        dest: "{{ log_archive_dir }}/{{ item.path | basename }}.{{ ansible_date_time.iso8601 }}.gz"
+        format: gz
+      loop: "{{ old_logs.files }}"
+      when: old_logs.matched > 0
+      tags:
+        - logs
+
+    - name: Ensure critical services are running and enabled
+      service:
+        name: "{{ item }}"
+        state: started
+        enabled: yes
+      loop:
+        - firewalld
+        - chronyd
+      tags:
+        - services
+
+    - name: Check if reboot is required by the OS
+      stat:
+        path: /var/run/reboot-required
+      register: reboot_check
+      tags:
+        - reboot
+
+    - name: Create a reboot flag file if needed
+      file:
+        path: "{{ reboot_required_file }}"
+        state: touch
+      when: reboot_check.stat.exists
+      tags:
+        - reboot
+
+  handlers:
+
+    - name: Trigger Reboot
+      reboot:
+        reboot_timeout: 600
+      when: reboot_check.stat.exists
