@@ -1,0 +1,43 @@
+<#
+.SYNOPSIS
+  Lookup Windows services on a remote server
+
+.DESCRIPTION
+  This script asks for a server name, credentials, and a service-name pattern.
+  It then invokes Get-Service on the remote host and displays matching services.
+
+.NOTES
+  Requires PowerShell Remoting (WinRM) enabled on the target.
+#>
+
+# Prompt for server name
+$server = Read-Host "Enter target server name or IP"
+
+# Prompt for credentials
+$cred = Get-Credential -Message "Enter credentials for $server"
+
+# Prompt for service name (wildcard supported)
+$svcPattern = Read-Host "Enter service name or pattern (e.g. 'Win*', 'Spooler')"
+
+try {
+    # Invoke remote command to get services
+    $services = Invoke-Command -ComputerName $server `
+                               -Credential $cred `
+                               -ErrorAction Stop `
+                               -ScriptBlock {
+        param ($pattern)
+        # Get-Service supports wildcard patterns
+        Get-Service -Name $pattern | Select-Object Name, DisplayName, Status, StartType
+    } -ArgumentList $svcPattern
+
+    if ($services) {
+        Write-Host "`nServices matching '$svcPattern' on ${server}:" -ForegroundColor Green
+        $services | Format-Table -AutoSize
+    }
+    else {
+        Write-Warning "No services found matching '$svcPattern' on $server."
+    }
+}
+catch {
+    Write-Error "Failed to query services on $server. $_"
+}
