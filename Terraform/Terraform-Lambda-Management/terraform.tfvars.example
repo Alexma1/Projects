@@ -1,0 +1,24 @@
+# Terraform Variables Configuration
+# Copy this file to terraform.tfvars and customize the values
+
+# AWS Configuration
+aws_region  = "us-east-1"
+environment = "dev"
+
+# Lambda Function Configuration
+function_name       = "lambda-function-manager"
+retention_days      = 30
+schedule_expression = "rate(7 days)"  # Run weekly
+memory_size        = 256
+timeout            = 300
+runtime            = "python3.9"
+
+# Logging Configuration
+log_retention_days = 14
+
+# Additional Tags
+tags = {
+  Owner       = "DevOps Team"
+  CostCenter  = "Infrastructure"
+  Application = "Lambda Management"
+}
