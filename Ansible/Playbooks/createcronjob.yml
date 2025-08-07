@@ -1,0 +1,17 @@
+- name: Schedule cron job for Thursday at 10 AM
+  hosts: all
+  become: yes
+  tasks:
+    - name: Create cron job for Thursday 10 AM
+      ansible.builtin.cron:
+        name: "Weekly Thursday task"
+        minute: "0"
+        hour: "10"
+        day: "*"
+        month: "*"
+        weekday: "4"
+        job: "/path/to/your/script.sh"
+        user: "{{ ansible_user | default('root') }}"
+        state: present
+
+            # https://docs.ansible.com/ansible/2.9/modules/list_of_all_modules.html

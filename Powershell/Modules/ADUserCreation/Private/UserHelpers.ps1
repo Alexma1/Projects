@@ -51,10 +51,10 @@ function New-UserDetails {
 function New-SamAccountName {
     <#
     .SYNOPSIS
-        Generates a unique SamAccountName.
+        Creates a unique SamAccountName.
     
     .DESCRIPTION
-        This private function generates a SamAccountName using various patterns
+        This private function creates a SamAccountName using various patterns
         and ensures it's unique in Active Directory.
     #>
     

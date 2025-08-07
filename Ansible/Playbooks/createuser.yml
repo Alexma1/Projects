@@ -1,0 +1,24 @@
+---
+- name: Create user George on remote clients
+  hosts: all
+  become: yes
+  tasks:
+    - name: Create user george
+      ansible.builtin.user:
+        name: george
+        home: /home/george
+        shell: /bin/bash
+        create_home: yes
+        state: present
+        
+    - name: Ensure george's home directory has correct permissions
+      ansible.builtin.file:
+        path: /home/george
+        owner: george
+        group: george
+        mode: '0755'
+        state: directory
+        
+    - name: Display user creation status
+      ansible.builtin.debug:
+        msg: "User george has been created with home directory /home/george and shell /bin/bash"

@@ -57,7 +57,7 @@ function Test-PasswordComplexity {
     [CmdletBinding()]
     param(
         [Parameter(Mandatory = $true)]
-        [SecureString]$Password
+        [System.Security.SecureString]$Password
     )
     
     # Convert SecureString to plain text for validation (temporarily)
