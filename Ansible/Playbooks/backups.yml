@@ -1,0 +1,53 @@
+---
+- name: Remote VM Backup Script
+  hosts: all
+  become: yes
+  vars:
+    backup_date: "{{ ansible_date_time.date }}"
+    backup_dir: "/backup/{{ inventory_hostname }}_{{ backup_date }}"
+    
+  tasks:
+    - name: Create backup directory
+      file:
+        path: "{{ backup_dir }}"
+        state: directory
+        mode: '0755'
+    
+    - name: Backup critical directories
+      archive:
+        path: 
+          - /etc
+          - /home
+          - /var/log
+        dest: "{{ backup_dir }}/system_backup_{{ backup_date }}.tar.gz"
+        exclude_path:
+          - /var/log/*.log
+        format: gz
+      ignore_errors: yes
+    
+    - name: Backup database (if MySQL exists)
+      shell: |
+        if command -v mysqldump &> /dev/null; then
+          mysqldump --all-databases > {{ backup_dir }}/mysql_backup_{{ backup_date }}.sql
+        fi
+      ignore_errors: yes
+    
+    - name: Create system info snapshot
+      shell: |
+        echo "VM Backup Info - {{ backup_date }}" > {{ backup_dir }}/vm_info.txt
+        echo "Hostname: $(hostname)" >> {{ backup_dir }}/vm_info.txt
+        echo "IP: $(hostname -I)" >> {{ backup_dir }}/vm_info.txt
+        echo "OS: $(cat /etc/os-release | head -1)" >> {{ backup_dir }}/vm_info.txt
+        echo "Disk Usage:" >> {{ backup_dir }}/vm_info.txt
+        df -h >> {{ backup_dir }}/vm_info.txt
+    
+    - name: Download backup to local machine
+      fetch:
+        src: "{{ backup_dir }}/system_backup_{{ backup_date }}.tar.gz"
+        dest: "./vm_backups/{{ inventory_hostname }}/"
+        flat: yes
+      ignore_errors: yes
+    
+    - name: Display backup completion
+      debug:
+        msg: "Backup completed for {{ inventory_hostname }} - saved to {{ backup_dir }}"

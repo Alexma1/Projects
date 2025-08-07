@@ -1,0 +1,37 @@
+---
+- name: Find and Kill Process by Name
+  hosts: all
+  become: yes
+  vars:
+    process_name: "nginx"  # Change this to the process you want to kill
+    
+  tasks:
+    - name: Find running process by name
+      shell: pgrep -f "{{ process_name }}"
+      register: process_pids
+      ignore_errors: yes
+      
+    - name: Display found process PIDs
+      debug:
+        msg: "Found PIDs for {{ process_name }}: {{ process_pids.stdout_lines }}"
+      when: process_pids.stdout_lines | length > 0
+      
+    - name: Display message when no process found
+      debug:
+        msg: "No running process found with name: {{ process_name }}"
+      when: process_pids.stdout_lines | length == 0
+      
+    - name: Kill the process using registered PIDs
+      shell: kill {{ item }}
+      loop: "{{ process_pids.stdout_lines }}"
+      register: kill_result
+      ignore_errors: yes
+      when: process_pids.stdout_lines | length > 0
+      
+    - name: Display kill command results
+      debug:
+        msg: "Kill command result for PID {{ item.item }}: {{ 'Success' if item.rc == 0 else 'Failed' }}"
+      loop: "{{ kill_result.results }}"
+      when: 
+        - kill_result is defined
+        - kill_result.results is defined
