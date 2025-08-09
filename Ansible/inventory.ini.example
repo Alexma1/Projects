@@ -1,0 +1,11 @@
+[web_servers]
+client1.xyz.com
+client1.xyz.com
+
+[abc:vars]
+fooserver=foo.abc.example.com
+ntpserver=ntp.abc.example.com
+
+server1 ansible_host=201.0.113.111
+server2 ansible_host=201.0.113.112
+server3 ansible_host=abc.example.com

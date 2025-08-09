@@ -1,0 +1,36 @@
+---
+- name: Install Apache on RedHat Systems
+  hosts: all
+  become: yes
+  
+  tasks:
+    - name: Install Apache webserver on RedHat/CentOS
+      yum:
+        name: httpd
+        state: present
+      when: ansible_os_family == "RedHat"
+
+    - name: Install Apache on Ubuntu
+      apt-get:
+        name: apache2
+        state: present
+      when: ansible_os_family == "Ubuntu"
+    
+    - name: Start and enable Apache service
+      service:
+        name: httpd
+        state: started
+        enabled: yes
+      when: ansible_os_family == "RedHat"
+    
+    - name: Display message for RedHat systems
+      debug:
+        msg: "Apache webserver installed and started on {{ inventory_hostname }}"
+      when: ansible_os_family == "RedHat"
+    
+    - name: Display message for non-RedHat systems
+      debug:
+        msg: "Skipping Apache installation - {{ inventory_hostname }} is not a RedHat system (OS: {{ ansible_os_family }})"
+      when: ansible_os_family != "RedHat"
+
+  # ansible localhost -m setup to get built in variables

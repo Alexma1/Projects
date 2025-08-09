@@ -1,0 +1,53 @@
+---
+- name: Simple User Creation with Loops
+  hosts: localhost
+  become: yes
+  vars:
+    # Simple list of users
+    users:
+      - alice
+      - bob
+      - charlie
+    
+    # Users with details
+    admin_users:
+      - name: admin1
+        group: admin
+      - name: webuser
+        group: www-data
+
+  tasks:
+    # Basic loop - create simple users
+    - name: Create basic users
+      user:
+        name: "{{ item }}"
+        state: present
+        create_home: yes
+      loop: "{{ users }}"
+
+    # Loop with data - create admin users
+    - name: Create admin users with groups
+      user:
+        name: "{{ item.name }}"
+        group: "{{ item.group }}"
+        state: present
+        create_home: yes
+      loop: "{{ admin_users }}"
+
+    # Range loop - create numbered users
+    - name: Create numbered users (user1-3)
+      user:
+        name: "user{{ item }}"
+        state: present
+        create_home: yes
+      loop: "{{ range(1, 4) | list }}"
+
+    # Verify created users
+    - name: List created users
+      shell: "getent passwd | grep -E '(alice|bob|charlie|admin1|webuser|user[0-9])' | cut -d: -f1"
+      register: created_users
+      changed_when: false
+
+    - name: Show results
+      debug:
+        msg: "Created users: {{ created_users.stdout_lines }}"
